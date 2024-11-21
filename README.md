@@ -1,5 +1,12 @@
 # VirtualAssistant
 
+to access .env variables:
+
+ - pip install openai
+
+
+SpeechToText:
+ - pip install git+https://github.com/openai/whisper.git
 
 recordAudio:
  - pip install pyaudio
