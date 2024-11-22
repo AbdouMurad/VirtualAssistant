@@ -8,6 +8,5 @@ if __name__ == "__main__":
     
     Record()
     print(interpertText(TranscribeSpeech('Recorded.wav'))) 
+    pass
     
-    pass  
-  
