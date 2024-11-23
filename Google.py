@@ -4,6 +4,10 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 from google.auth.transport.requests import Request
+import base64
+from email.mime.text import MIMEText
+
+
 
 #These scopes are full access to gmail, contacts and calendar
 SCOPES = [
@@ -19,7 +23,7 @@ def authenticate_google_api():
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh.token: #check if creds exists but is expired
+        if creds and creds.expired and creds.refresh_token: #check if creds exists but is expired
             creds.refresh(Request())
         else:
             # Set up the OAuth 2.0 flow (opens a browser window for user authentication)
@@ -33,3 +37,16 @@ def authenticate_google_api():
     service = googleapiclient.discovery.build('gmail', 'v1', credentials=creds)
     return service
 
+def send_email_gmail(service, to_email, subject, text):
+    #Create mime email address
+    message = MIMEText(text)
+    message['to'] = to_email
+    message['subject'] = subject
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+    #send the email
+    try:
+        send_message = (service.users().messages().send(userId="me", body={"raw": raw_message}).execute())
+        print(f"successfuly sent message! ID:{send_message["id"]}")
+    except Exception as E:
+        print(E)
