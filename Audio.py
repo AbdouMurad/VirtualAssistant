@@ -2,7 +2,31 @@ import pyaudio
 import keyboard
 import time
 import wave
+from gtts import gTTS
+import io
+import pygame
 
+
+def Speak(text):
+    tts = gTTS(text=text, lang="en", slow=False)
+    
+    # Create a BytesIO object to hold the speech data in memory
+    fp = io.BytesIO()  # Instantiate BytesIO correctly
+    tts.write_to_fp(fp)  # Write the speech directly to the BytesIO object
+    fp.seek(0)  # Reset the pointer to the beginning of the BytesIO object
+    
+    # Initialize pygame mixer (for audio playback)
+    pygame.mixer.init()
+    
+    # Load the audio from the BytesIO object
+    pygame.mixer.music.load(fp)
+    
+    # Play the audio
+    pygame.mixer.music.play()
+
+    # Wait for the sound to finish before exiting
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
 def Record():
     chunk = 1024
     format = pyaudio.paInt16

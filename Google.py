@@ -34,8 +34,9 @@ def authenticate_google_api():
         #save creds
         with open("pickle.token","wb") as token:
             pickle.dump(creds,token)
-    service = googleapiclient.discovery.build('gmail', 'v1', credentials=creds)
-    return service
+    serviceGmail = googleapiclient.discovery.build('gmail', 'v1', credentials=creds)
+    serviceContacts = googleapiclient.discovery.build('people','v1',credentials=creds)
+    return [serviceGmail,serviceContacts]
 
 def send_email_gmail(service, to_email, subject, text):
     #Create mime email address
@@ -50,3 +51,28 @@ def send_email_gmail(service, to_email, subject, text):
         print(f"successfuly sent message! ID:{send_message["id"]}")
     except Exception as E:
         print(E)
+
+def list_google_contacts(service):
+    try:
+        results = service.people().connections().list(
+            resourceName='people/me',
+            pageSize=1000,  # Number of contacts to fetch - 1000 is max
+            personFields='names,emailAddresses'  # Specify fields you want
+        ).execute()
+        connections = results.get('connections',[])
+        contacts = dict()
+        for person in connections:
+            names = person.get('names', [])
+            emails = person.get('emailAddresses',[])
+
+            contacts[names[0].get("displayName")] = emails[0].get("value")
+        return contacts
+    except Exception as e:
+        print(e)
+    
+def add_contact(service, name, email):
+    contact = {
+        "names":[{"givenName":name}],
+        "emailAddresses":[{"value":email}]
+    }   
+    service.people().createContact(body  = contact).execute()

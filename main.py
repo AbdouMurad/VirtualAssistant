@@ -1,16 +1,22 @@
-from ProcessRequest import TranscribeSpeech, interpertText
-from recordAudio import Record
-import Google
-     
-if __name__ == "__main__":
-    #TranscripeSpeech is function that uses OpenAi api to transcripe audio file using whisper model 
+from ProcessRequest import TranscribeSpeech, InterpertTextObject
+from Audio import Record,Speak
 
-    #uncomment the following line when you want to use it but keep it off on default because it charges per usage
+
+def main():
+    Speak("Hello, how can i help you today")
+    while True:
+        Record()
         
-    service = Google.authenticate_google_api()
-  
-   
-    Record()
-    print("GPT RESPONSE:",interpertText(TranscribeSpeech('Recorded.wav'))) 
-    pass                                                                            
-    
+        TextProcessor = InterpertTextObject()
+        
+        UserText = TranscribeSpeech("Recorded.wav") #text as speech      
+            
+        FunctionsRequest = TextProcessor.interpertText(UserText,TextProcessor.system_message_text_to_funcitons,TextProcessor.prompt_text_to_functions)    
+                      
+
+        SystemText = TextProcessor.processFunctions(FunctionsRequest,UserText)
+        Speak(SystemText)
+
+if __name__ == "__main__":
+    main()                                     
+                    
