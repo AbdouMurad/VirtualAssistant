@@ -42,11 +42,18 @@ class InterpertTextObject:
 
 
     def processFunctions(self,functions, text):
+        generating_text = False
         response = ""
         for function in functions.split():
+            print(function)
+            if function == "generate_response":
+                generating_text = True
             if function in self.FunctionsDict.keys():
                 response += self.FunctionsDict[function](text)
-        return self.generate_response_postfunction(text)
+        
+        if generating_text:
+            return response
+        return self.generate_response_postfunction(response)
 
     def send_email(self,text):
         services = Google.authenticate_google_api()
@@ -87,12 +94,11 @@ class InterpertTextObject:
 
     def generate_response(self,text):
         response = self.interpertText(text,self.system_message_generate_response,self.prompt_generate_response)
-        print(response)
+        return response
 
     def generate_response_postfunction(self,text):
         response = self.interpertText(text,self.system_message_generate_response_postfunction,self.prompt_generate_response_postfunction)
         return response
-
 
 
     def interpertText(self,text,system_message,prompt): #gpt-3.5 converts text to a prompt
