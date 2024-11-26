@@ -35,7 +35,7 @@ class InterpertTextObject:
         self.prompt_add_contact = "create api request from the following user command:"
 
         self.system_message_generate_response = "you are assistant.name is Nova.respond to user text with conversational text"
-        self.prompt_generate_response = "you are assistant.name is benti.respond to user input:"
+        self.prompt_generate_response = "you are assistant.name is Nova.respond to user input:"
 
         self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions"
         self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete:"
