@@ -13,6 +13,7 @@ ProcessText:
  - pip install git+https://github.com/openai/whisper.git
  - pip install fuzzywuzzy
  - pip install python-Levenshtein
+ - pip install transformers
 
 
 

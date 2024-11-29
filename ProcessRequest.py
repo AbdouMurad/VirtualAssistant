@@ -3,11 +3,36 @@ import os
 from dotenv import load_dotenv
 import json
 import Google
-
+from transformers import pipeline
 from fuzzywuzzy import process
 
 load_dotenv() #loads env variables
 openai.api_key = os.getenv('OpenAi_Api_Key') #open AI key
+
+class DecisionTreeNode:
+    def __init__(self, function = None, name = None):
+        self.name = name
+        self.function = function
+        self.children = {}
+
+def initializeTree():
+    DecisionTreeDictionary = json.load(open('DecisionTree.json', 'r'))
+    root = DecisionTreeNode()
+    build_tree(root,DecisionTreeDictionary)
+
+    
+    return root
+
+def build_tree(node,dict): #build decision tree
+    if dict["children"]:
+        for child in dict["children"]:
+            new_node = DecisionTreeNode(
+                function = dict["children"][child]["function"],
+                name = dict["children"][child]["name"]
+                )
+            node.children[new_node.name] = new_node
+            build_tree(new_node,dict["children"][child])
+
 
 
 def TranscribeSpeech(FileName): #speech to text
@@ -17,22 +42,22 @@ def TranscribeSpeech(FileName): #speech to text
 
 class InterpertTextObject:
     def __init__(self):
+        self.rootDecisionTreeRoot = initializeTree()
         self.functions = "send_email create_calander_event create_contact function_does_not_exist generate_response"
         self.FunctionsDict = {
             "send_email":self.send_email,
             "create_event":self.create_event,
             "create_contact":self.create_contact,
-            "generate_response":self.generate_response,
+            "generate_text":self.generate_text,
         }
+        self.Assitant_name = "Nova"
         
-        
-        self.system_message_text_to_funcitons = f"you are assistant.name is Nova.look at user input decide function from:{self.functions}.respond with function name only seperated by spaced"
-        self.prompt_text_to_functions = f"Decide function or to generate text:"
+        self.classifier = pipeline('zero-shot-classification',  model="facebook/bart-large-mnli")
 
         self.system_message_email = "you are assistant.your name is Nova.fill in info for email api request in following order:(name)-(subject)-(text).Create json format.if info not given leave blank"
         self.prompt_email = "create api request from the following user command:"
 
-        self.system_message_add_contact ="you are assistant.your name is Nova.fill in info for add contact api request in following order:(name)-(email).Create json format.if info not given leave blank"
+        self.system_message_add_contact ="you are assistant.your name is Nova.fill in info for add contact api request in following order:(name:persons_name,email:persons_email).Create json format.if info not given leave blank"
         self.prompt_add_contact = "create api request from the following user command:"
 
         self.system_message_generate_response = "you are assistant.name is Nova.respond to user text with conversational text"
@@ -41,20 +66,31 @@ class InterpertTextObject:
         self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions"
         self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete:"
 
-
-    def processFunctions(self,functions, text):
-        generating_text = False
-        response = ""
-        for function in functions.split():
-            print(function)
-            if function == "generate_response":
-                generating_text = True
-            if function in self.FunctionsDict.keys():
-                response += self.FunctionsDict[function](text)
+        #####UPDATED PROMPTS#######
+        self.system_message_text_to_funcitons = f"you are assistant. name is {self.Assitant_name}.classify task into one of:{list(self.rootDecisionTreeRoot.children.keys())} return in json format: (task_name:name, text:simplified_text)"
+        self.prompt_text_to_functions = f"respond to user input strictly in the format you were given. if you find multiple tasks create multiple json outputs seperated by star (*)"
         
-        if generating_text:
-            return response
-        return self.generate_response_postfunction(response)
+    
+
+    def splitFunctions(self,functions):
+        #UPDATED
+        FunctionsToProcess = []
+        for Function in functions.split("*"):
+            print(Function)
+            FunctionsToProcess.append(json.loads(Function))
+        
+        for Function in FunctionsToProcess:
+            self.processFunction(Function,self.rootDecisionTreeRoot.children[Function["task_name"]])
+    
+    def processFunction(self,function,node):
+        if node.function == None:
+            input_text = function['text']
+            labels = list(node.children.keys())
+            result = self.classifier(input_text,labels)['labels'][0]
+            self.processFunction(function, node.children[result])
+        else:
+            self.FunctionsDict[node.name](function['text'])
+
 
     def send_email(self,text):
         services = Google.authenticate_google_api()
@@ -79,6 +115,7 @@ class InterpertTextObject:
     
 
     def create_contact(self,text):
+        print(text)
         service = Google.authenticate_google_api()[1]
         api_request = self.interpertText(text,self.system_message_add_contact,self.prompt_add_contact)
         data = json.loads(api_request)
@@ -94,9 +131,10 @@ class InterpertTextObject:
     def create_event(self,text):
         print("EVENT")
 
-    def generate_response(self,text):
+    def generate_text(self,text):
         response = self.interpertText(text,self.system_message_generate_response,self.prompt_generate_response)
-        return response
+        print(response)
+        #return response
 
     def generate_response_postfunction(self,text):
         response = self.interpertText(text,self.system_message_generate_response_postfunction,self.prompt_generate_response_postfunction)
