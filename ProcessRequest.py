@@ -24,7 +24,8 @@ class InterpertTextObject:
             "create_contact":self.create_contact,
             "generate_response":self.generate_response,
         }
-
+        
+        
         self.system_message_text_to_funcitons = f"you are assistant.name is Nova.look at user input decide function from:{self.functions}.respond with function name only seperated by spaced"
         self.prompt_text_to_functions = f"Decide function or to generate text:"
 
@@ -35,7 +36,7 @@ class InterpertTextObject:
         self.prompt_add_contact = "create api request from the following user command:"
 
         self.system_message_generate_response = "you are assistant.name is Nova.respond to user text with conversational text"
-        self.prompt_generate_response = "you are assistant.name is benti.respond to user input:"
+        self.prompt_generate_response = "you are assistant.name is Nova.respond to user input:"
 
         self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions"
         self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete:"
@@ -75,6 +76,7 @@ class InterpertTextObject:
                 print("canceled")
         except Exception as e:
             print(e)
+    
 
     def create_contact(self,text):
         service = Google.authenticate_google_api()[1]
