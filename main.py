@@ -14,8 +14,7 @@ def main():
         FunctionsRequest = TextProcessor.interpertText(UserText,TextProcessor.system_message_text_to_funcitons,TextProcessor.prompt_text_to_functions)    
                       
         SystemText = TextProcessor.processFunctions(FunctionsRequest,UserText)
-        if FunctionsRequest == "generate_text":
-            pass 
+
         Speak(SystemText)
 
 if __name__ == "__main__":

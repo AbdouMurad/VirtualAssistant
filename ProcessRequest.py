@@ -9,6 +9,19 @@ from fuzzywuzzy import process
 load_dotenv() #loads env variables
 openai.api_key = os.getenv('OpenAi_Api_Key') #open AI key
 
+class DecisionTreeNode:
+    def __init__(self,question = None, function = None, name = None):
+        self.name = name
+        self.Question = question
+        self.function = function
+        self.children = {}
+
+def initializeTree():
+    root = DecisionTreeNode()
+
+
+
+
 
 def TranscribeSpeech(FileName): #speech to text
     File = open(FileName, 'rb')
@@ -17,6 +30,7 @@ def TranscribeSpeech(FileName): #speech to text
 
 class InterpertTextObject:
     def __init__(self):
+        self.rootDecisionTree = initializeTree()
         self.functions = "send_email create_calander_event create_contact function_does_not_exist generate_response"
         self.FunctionsDict = {
             "send_email":self.send_email,
@@ -35,7 +49,7 @@ class InterpertTextObject:
         self.prompt_add_contact = "create api request from the following user command:"
 
         self.system_message_generate_response = "you are assistant.name is Nova.respond to user text with conversational text"
-        self.prompt_generate_response = "you are assistant.name is benti.respond to user input:"
+        self.prompt_generate_response = "you are assistant.name is Nova.respond to user input:"
 
         self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions"
         self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete:"

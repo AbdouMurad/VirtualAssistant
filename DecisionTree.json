@@ -1,0 +1,100 @@
+{
+    "name":"root",
+    "question":"which of the categories does the function fall into?: email - contacts - calendar - music", 
+    "function": null,
+    "children":
+    {  
+        "email":
+        {
+            "name":"email",
+            "question":"which of the categories does the function fall into?: send_email - none",
+            "function":null,
+            "children":
+            {
+                "send_email":
+                    {
+                        "name":"send_email",
+                        "question":null,
+                        "function":"send_email",
+                        "children": null
+            
+                    },
+                "none":
+                    {
+                        "name":"none",
+                        "question":null,
+                        "function":"try_again",
+                        "children": null
+                    }           
+
+        
+            }
+        },
+        "contacts":
+        {
+            "name":"contacts",
+            "question":"which of the categories does the function fall into?: create_contact - none",
+            "function": null,
+            "children":
+                {
+                    "create_contact":
+                        {
+                            "name":"create_contact",
+                            "question":null,
+                            "function":"create_contact",
+                            "children": null
+                        },
+                        "none":
+                        {
+                            "name":"none",
+                            "question":null,
+                            "function":"try_again",
+                            "children": null
+                        } 
+                }
+            
+        },
+        "calendar":
+            {
+                "name":"calendar",
+                "question":"which of the categories does the function fall into?: create_event - read_event - none",
+                "function":null,
+                "children":
+                    {
+                        "create_event":
+                        {
+                            "name":"create_event",
+                            "question":null,
+                            "function":"create_event",
+                            "children":null
+                        },
+                        "read_event":
+                        {
+                            "name":"read_event",
+                            "question":null,
+                            "fuction":"read_event",
+                            "children":null
+                        },
+                        "none":
+                        {
+                            "name":"none",
+                            "question":null,
+                            "function":"try_again",
+                            "children": null
+                        } 
+                    }
+            }
+
+    
+    
+    
+    
+    
+    
+    }
+
+
+
+
+
+}
