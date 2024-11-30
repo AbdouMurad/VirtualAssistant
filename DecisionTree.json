@@ -1,0 +1,93 @@
+{
+    "name":"root",
+    "function": null,
+    "children":
+    {  
+        "email":
+        {
+            "name":"email",
+            "function":null,
+            "children":
+            {
+                "send_email":
+                    {
+                        "name":"send_email",
+                        "function":"send_email",
+                        "children": null
+            
+                    },
+                "none":
+                    {
+                        "name":"none",
+                        "function":"try_again",
+                        "children": null
+                    }           
+            }
+        },
+        "contacts":
+        {
+            "name":"contacts",
+            "function": null,
+            "children":
+                {
+                    "create_contact":
+                        {
+                            "name":"create_contact",
+                            "function":"create_contact",
+                            "children": null
+                        },
+                        "none":
+                        {
+                            "name":"none",
+                            "function":"try_again",
+                            "children": null
+                        } 
+                }
+            
+        },
+        "calendar":
+            {
+                "name":"calendar",
+                "function":null,
+                "children":
+                    {
+                        "create_event":
+                        {
+                            "name":"create_event",
+                            "function":"create_event",
+                            "children":null
+                        },
+                        "read_event":
+                        {
+                            "name":"read_event",
+                            "function":"read_event",
+                            "children":null
+                        },
+                        "none":
+                        {
+                            "name":"none",
+                            "function":"try_again",
+                            "children": null
+                        } 
+                    }
+            },
+        "generate_text":
+            {
+                "name":"generate_text",
+                "function":"generate_text",
+                "children":null
+            }
+
+    
+    
+    
+    
+    
+    
+    }
+
+
+
+
+
+}
