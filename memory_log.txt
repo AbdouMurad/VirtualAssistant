@@ -1,0 +1,40 @@
+User: you
+System: Hello
+User: Thank you. Bye-bye. 
+System: Hello
+
+[2024-12-01 13:26:17]
+User: What NBA games are scheduled this weekend?
+System: Hello
+User: What was the score in the Warriors game last night?
+System: Hello
+User: you
+System: Hello
+
+[2024-12-01 13:30:52]
+User: Schedule a meeting this Saturday, 2 o'clock to 3 o'clock.
+System: Hello
+User: Schedule a meeting today from 3 o'clock to 5.
+System: Hello
+
+[2024-12-01 13:37:10]
+User: Put the NBA games this weekend onto my schedule.
+System: Hello
+
+[2024-12-01 13:38:10]
+User: and an email.
+System: Hello
+User: a contact named Abdu.
+System: Hello
+
+[2024-12-01 13:41:44]
+User: and an email.
+System: Hello
+
+[2024-12-01 13:43:51]
+User: Create a contact.
+System: Hello
+
+[2024-12-01 13:45:00]
+User: Create a contact.
+System: Hello
