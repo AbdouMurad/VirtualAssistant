@@ -49,12 +49,14 @@ class InterpertTextObject:
             "create_event":self.create_event,
             "create_contact":self.create_contact,
             "generate_text":self.generate_text,
+            "read_event":self.read_event,
         }
         self.Assitant_name = "Nova"
-        
+        self.TimeZone = "America/Edmonton" #Hard coded right now
+
         self.classifier = pipeline('zero-shot-classification',  model="facebook/bart-large-mnli")
 
-        self.system_message_email = "you are assistant.your name is Nova.fill in info for email api request in following order:(name)-(subject)-(text).Create json format.if info not given leave blank"
+        self.system_message_email = "you are assistant.your name is Nova.fill in info for email api request in following order:(name:persons_name,subject:summary,text:text_to_send).Create json format.if info not given leave blank"
         self.prompt_email = "create api request from the following user command:"
 
         self.system_message_add_contact ="you are assistant.your name is Nova.fill in info for add contact api request in following order:(name:persons_name,email:persons_email).Create json format.if info not given leave blank"
@@ -70,7 +72,8 @@ class InterpertTextObject:
         self.system_message_text_to_funcitons = f"you are assistant. name is {self.Assitant_name}.classify task into one of:{list(self.rootDecisionTreeRoot.children.keys())} return in json format: (task_name:name, text:simplified_text)"
         self.prompt_text_to_functions = f"respond to user input strictly in the format you were given. if you find multiple tasks create multiple json outputs seperated by star (*)"
         
-    
+        self.system_message_add_event = f"user text is request to create event in google calander. fill in info for api request in following json format:(summary:Title,location:location_of_event,description:summary,start:(dateTime:data_time,timeZone:TimeZone),end:(dateTime:data_time,timeZone:Timezone))"
+        self.prompt_add_event = f"fill in the api request in jason form. the time zone is {self.TimeZone}. Put date_time in this form: ex. 2024-12-01-T21:00:00 for both start and end. Assume event length is one hour unless specified and whatever else is not given leave empty"
 
     def splitFunctions(self,functions):
         #UPDATED
@@ -83,13 +86,14 @@ class InterpertTextObject:
             self.processFunction(Function,self.rootDecisionTreeRoot.children[Function["task_name"]])
     
     def processFunction(self,function,node):
+        print(node.name)
+        input_text = function['text']
         if node.function == None:
-            input_text = function['text']
             labels = list(node.children.keys())
             result = self.classifier(input_text,labels)['labels'][0]
             self.processFunction(function, node.children[result])
         else:
-            self.FunctionsDict[node.name](function['text'])
+            self.FunctionsDict[node.name](input_text)
 
 
     def send_email(self,text):
@@ -129,7 +133,17 @@ class InterpertTextObject:
 
 
     def create_event(self,text):
+        service = Google.authenticate_google_api()[2]
+        api_request = self.interpertText(text,self.system_message_add_event,self.prompt_add_event)
+        data = json.loads(api_request)
+        
+        data["reminders"] = {}
+        data["reminders"]["useDefault"] = True
+        Google.create_event(service,data)
+    
+    def read_event(self,text):
         print("EVENT")
+
 
     def generate_text(self,text):
         response = self.interpertText(text,self.system_message_generate_response,self.prompt_generate_response)

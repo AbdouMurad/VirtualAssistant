@@ -36,7 +36,8 @@ def authenticate_google_api():
             pickle.dump(creds,token)
     serviceGmail = googleapiclient.discovery.build('gmail', 'v1', credentials=creds)
     serviceContacts = googleapiclient.discovery.build('people','v1',credentials=creds)
-    return [serviceGmail,serviceContacts]
+    serviceCalander = googleapiclient.discovery.build('calendar','v3',credentials=creds)
+    return [serviceGmail,serviceContacts,serviceCalander]
 
 def send_email_gmail(service, to_email, subject, text):
     #Create mime email address
@@ -76,3 +77,9 @@ def add_contact(service, name, email):
         "emailAddresses":[{"value":email}]
     }   
     service.people().createContact(body  = contact).execute()
+
+def create_event(service,data):
+    print(data)
+    event = service.events().insert(calendarId="primary", body=data).execute()
+    
+    print(event.get('htmlLink'))
