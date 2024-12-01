@@ -3,8 +3,6 @@
 make sure you are running on python 3.12.6
 
 to access .env variables:
- - pip install python-dotenv
-
 
  - pip install openai
  - pip install python-dotenv
