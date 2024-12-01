@@ -1,5 +1,6 @@
 python-dotenv
 openai
+openai-whisper @ git+https://github.com/openai/whisper.git
 fuzzywuzzy
 python-Levenshtein
 transformers
@@ -7,3 +8,7 @@ pyaudio
 keyboard
 gTTS
 pygame
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
