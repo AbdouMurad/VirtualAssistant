@@ -57,10 +57,10 @@
                             "function":"create_event",
                             "children":null
                         },
-                        "read_event":
+                        "list_events":
                         {
-                            "name":"read_event",
-                            "function":"read_event",
+                            "name":"list_events",
+                            "function":"list_events",
                             "children":null
                         },
                         "none":

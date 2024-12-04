@@ -83,3 +83,7 @@ def create_event(service,data):
     event = service.events().insert(calendarId="primary", body=data).execute()
     
     print(event.get('htmlLink'))
+
+def get_events(service,data):
+    print(data)
+

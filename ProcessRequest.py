@@ -42,6 +42,9 @@ def TranscribeSpeech(FileName): #speech to text
 
 class InterpertTextObject:
     def __init__(self):
+
+        self.services = None #store the service from google api
+
         self.rootDecisionTreeRoot = initializeTree()
         self.functions = "send_email create_calander_event create_contact function_does_not_exist generate_response"
         self.FunctionsDict = {
@@ -49,7 +52,7 @@ class InterpertTextObject:
             "create_event":self.create_event,
             "create_contact":self.create_contact,
             "generate_text":self.generate_text,
-            "read_event":self.read_event,
+            "list_events":self.read_event,
         }
         self.Assitant_name = "Nova"
         self.TimeZone = "America/Edmonton" #Hard coded right now
@@ -65,11 +68,11 @@ class InterpertTextObject:
         self.system_message_generate_response = "you are assistant.name is Nova.respond to user text with conversational text"
         self.prompt_generate_response = "you are assistant.name is Nova.respond to user input:"
 
-        self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions"
-        self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete:"
+        self.system_message_generate_response_postfunction = "user text is list of functions you completed. create message saying you completed those functions. make it simple,dont have to list details"
+        self.prompt_generate_response_postfunction = "respond to user input confirming tasks complete (ex. I just send the email):"
 
         #####UPDATED PROMPTS#######
-        self.system_message_text_to_funcitons = f"you are assistant. name is {self.Assitant_name}.classify task into one of:{list(self.rootDecisionTreeRoot.children.keys())} return in json format: (task_name:name, text:simplified_text)"
+        self.system_message_text_to_funcitons = f"you are assistant.name is {self.Assitant_name}.classify task into one of:{list(self.rootDecisionTreeRoot.children.keys())} return in json format: (task_name:name, text:simplified_text)"
         self.prompt_text_to_functions = f"respond to user input strictly in the format you were given. if you find multiple tasks create multiple json outputs seperated by star (*)"
         
         self.system_message_add_event = f"user text is request to create event in google calander. fill in info for api request in following json format:(summary:Title,location:location_of_event,description:summary,start:(dateTime:data_time,timeZone:TimeZone),end:(dateTime:data_time,timeZone:Timezone))"
@@ -77,13 +80,23 @@ class InterpertTextObject:
 
     def splitFunctions(self,functions):
         #UPDATED
+        generating_text = False
         FunctionsToProcess = []
         for Function in functions.split("*"):
-            print(Function)
+            print("FUNCTION:",Function)
+            if "generate_text" in Function:
+                generating_text = True
             FunctionsToProcess.append(json.loads(Function))
         
         for Function in FunctionsToProcess:
-            self.processFunction(Function,self.rootDecisionTreeRoot.children[Function["task_name"]])
+            if Function["task_name"] == "generate_text":
+                response = self.processFunction(Function,self.rootDecisionTreeRoot.children[Function["task_name"]])
+            else:
+                self.processFunction(Function,self.rootDecisionTreeRoot.children[Function["task_name"]])
+            
+        if generating_text == False:
+            response = self.generate_response_postfunction(str(FunctionsToProcess))  
+        return response
     
     def processFunction(self,function,node):
         print(node.name)
@@ -91,19 +104,22 @@ class InterpertTextObject:
         if node.function == None:
             labels = list(node.children.keys())
             result = self.classifier(input_text,labels)['labels'][0]
-            self.processFunction(function, node.children[result])
+            response = self.processFunction(function, node.children[result])
         else:
-            self.FunctionsDict[node.name](input_text)
+            response = self.FunctionsDict[node.name](input_text)
+        return response
 
 
     def send_email(self,text):
-        services = Google.authenticate_google_api()
+        if self.services == None:
+            self.services = Google.authenticate_google_api()
+        services = self.services
         emailService = services[0]
-        contactSerive = services[1]
+        contactService = services[1]
         
         api_request = self.interpertText(text,self.system_message_email,self.prompt_email)
         data = json.loads(api_request)
-        contacts = Google.list_google_contacts(contactSerive)
+        contacts = Google.list_google_contacts(contactService)
         
         match = process.extractOne(data["name"],list(contacts.keys()))
         name = match[0] if match else data["name"] #selects the closest name otherwise default name given
@@ -111,7 +127,7 @@ class InterpertTextObject:
             print(f"send email to: {name}(y/n)")
             if input() == "y":
                 Google.send_email_gmail(emailService, contacts[name],data["subject"],data["text"])
-                return(f"email to {name} about {data["subject"]} ---")
+                return(f"email to {name} about {data["subject"]} ---") 
             else:
                 print("canceled")
         except Exception as e:
@@ -120,7 +136,9 @@ class InterpertTextObject:
 
     def create_contact(self,text):
         print(text)
-        service = Google.authenticate_google_api()[1]
+        if self.services == None:
+            self.services = Google.authenticate_google_api()
+        service = self.services[1]
         api_request = self.interpertText(text,self.system_message_add_contact,self.prompt_add_contact)
         data = json.loads(api_request)
         print(data)
@@ -128,27 +146,36 @@ class InterpertTextObject:
         return (f"contact made for {data["name"]}")
 
     def get_contacts(self):
-        service = Google.authenticate_google_api()[1]
+        if self.services == None:
+            self.services = Google.authenticate_google_api()
+
+        service = self.services[1]
         Google.list_google_contacts(service)
 
 
     def create_event(self,text):
-        service = Google.authenticate_google_api()[2]
+        if self.services == None:
+            self.services = Google.authenticate_google_api()
+        service = self.services[2]
         api_request = self.interpertText(text,self.system_message_add_event,self.prompt_add_event)
         data = json.loads(api_request)
         
         data["reminders"] = {}
         data["reminders"]["useDefault"] = True
         Google.create_event(service,data)
+        return None
     
     def read_event(self,text):
-        print("EVENT")
-
+        if self.services == None:
+            self.services = Google.authenticate_google_api()
+        service = self.services[2]
+        Google.get_events(service,text)
+        return None
 
     def generate_text(self,text):
         response = self.interpertText(text,self.system_message_generate_response,self.prompt_generate_response)
         print(response)
-        #return response
+        return response
 
     def generate_response_postfunction(self,text):
         response = self.interpertText(text,self.system_message_generate_response_postfunction,self.prompt_generate_response_postfunction)
