@@ -1,3 +1,4 @@
 .env
 credentials.json
 pickle.token
+memory_log.txt
