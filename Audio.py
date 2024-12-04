@@ -2,70 +2,84 @@ import pyaudio
 import keyboard
 import time
 import wave
-from gtts import gTTS
-import io
+
+
+import os
 import pygame
 
+#text to speech
+from dotenv import load_dotenv
+import io
+from google.cloud import texttospeech
+###
 
-def Speak(text):
-    tts = gTTS(text=text, lang="en", slow=False)
-    
-    # Create a BytesIO object to hold the speech data in memory
-    fp = io.BytesIO()  # Instantiate BytesIO correctly
-    tts.write_to_fp(fp)  # Write the speech directly to the BytesIO object
-    fp.seek(0)  # Reset the pointer to the beginning of the BytesIO object
-    
-    # Initialize pygame mixer (for audio playback)
-    pygame.mixer.init()
-    
-    # Load the audio from the BytesIO object
-    pygame.mixer.music.load(fp)
-    
-    # Play the audio
-    pygame.mixer.music.play()
+class AudioDevice:
+    def __init__(self):
+        load_dotenv()
+        self.credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.credentials_path
+        self.client = texttospeech.TextToSpeechClient()
+        self.voice = texttospeech.VoiceSelectionParams(
+            language_code = "en-US",
+            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+        )
+        self.audio_config = texttospeech.AudioConfig(audio_encoding = texttospeech.AudioEncoding.MP3)
+        pygame.init()
+        pygame.mixer.init()
+    def Speak(self,text):
+        text_input = texttospeech.SynthesisInput(text =text)
+        response = self.client.synthesize_speech(
+            input = text_input, voice = self.voice, audio_config=self.audio_config
+        )
+        audio_stream = io.BytesIO(response.audio_content)
+        audio_stream.seek(0)  # Reset the stream to the beginning
+            # Load the audio with pygame and play it
+        pygame.mixer.music.load(audio_stream, "mp3")
+        pygame.mixer.music.play()
 
-    # Wait for the sound to finish before exiting
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
-def Record():
-    chunk = 1024
-    format = pyaudio.paInt16
-    channels = 2
-    rate = 44100
-    Output_Filename = "Recorded.wav"
-    
-    p = pyaudio.PyAudio() 
+        # Wait until the audio has finished playing
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
 
-    stream = p.open(format=format,
-                    channels=channels,
-                    rate=rate,
-                    input=True,
-                    frames_per_buffer=chunk)
+    def Record(self):
+        chunk = 1024
+        format = pyaudio.paInt16
+        channels = 2
+        rate = 44100
+        Output_Filename = "Recorded.wav"
+        
+        p = pyaudio.PyAudio() 
 
-    frames = []
-    print("Press SPACE to start recording")
-    keyboard.wait('space')
-    print("Recording... Press SPACE to stop.")
-    time.sleep(0.2)
+        stream = p.open(format=format,
+                        channels=channels,
+                        rate=rate,
+                        input=True,
+                        frames_per_buffer=chunk)
 
-    while True:
-        try:
-            data = stream.read(chunk)  
-            frames.append(data)
-        except KeyboardInterrupt:
-            break
-        if keyboard.is_pressed('space'):
-            print("stopping recording") 
-            time.sleep(0.2)
-            break   
+        frames = []
+        print("Press SPACE to start recording")
+        keyboard.wait('space')
+        print("Recording... Press SPACE to stop.")
+        time.sleep(0.2)
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+        while True:
+            try:
+                data = stream.read(chunk)  
+                frames.append(data)
+            except KeyboardInterrupt:
+                break
+            if keyboard.is_pressed('space'):
+                print("stopping recording") 
+                time.sleep(0.2)
+                break   
 
-    wf = wave.open(Output_Filename, 'wb')  
-    wf.setnchannels(channels)
-    wf.setsampwidth(p.get_sample_size(format))
-    wf.setframerate(rate)
-    wf.writeframes(b''.join(frames))
-    wf.close()
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+        wf = wave.open(Output_Filename, 'wb')  
+        wf.setnchannels(channels)
+        wf.setsampwidth(p.get_sample_size(format))
+        wf.setframerate(rate)
+        wf.writeframes(b''.join(frames))
+        wf.close()

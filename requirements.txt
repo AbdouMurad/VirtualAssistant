@@ -6,7 +6,6 @@ python-Levenshtein
 transformers
 pyaudio
 keyboard
-gTTS
 pygame
 google-api-python-client
 google-auth
